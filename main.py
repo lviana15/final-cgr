@@ -7,6 +7,7 @@ import ctypes
 
 from utils import load_shader
 from meshes import generate_sphere
+from planet import Planet
 
 
 def main():
@@ -77,9 +78,39 @@ def main():
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm.value_ptr(view))
     glUniformMatrix4fv(proj_loc, 1, GL_FALSE, glm.value_ptr(projection))
 
+    # Sol (Não orbita ninguém, é grande e gira devagar)
+    sun = Planet(
+        radius=1.5,
+        rotation_speed=5.0, # 5 graus por segundo
+        orbit_radius=0.0,
+        orbit_speed=0.0,
+        parent=None
+    )
+
+    # Terra (Orbita o Sol)
+    earth = Planet(
+        radius=0.5,
+        rotation_speed=360.0, # Um giro completo por segundo (simulação rápida)
+        orbit_radius=4.0, # 4.0 unidades de distância do Sol
+        orbit_speed=30.0, # 30 graus por segundo
+        parent=sun 
+    )
+
+    # Lua (Orbita a Terra)
+    moon = Planet(
+        radius=0.15,
+        rotation_speed=180.0,
+        orbit_radius=1.0, # 1.0 unidade de distância da Terra
+        orbit_speed=180.0,
+        parent=earth
+    )
+
+    all_planets = [sun, earth, moon] # Lista para iterar
+
     # Loop Principal
     running = True
     while running:
+        # ... (código de eventos e clear)
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (
                 event.type == KEYDOWN and event.key == K_ESCAPE
@@ -88,17 +119,18 @@ def main():
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        # Atualizar a Model Matrix (Rotação do objeto)
+        # Atualizar a Model Matrix (Rotação e Translação de TODOS os objetos)
         time = pygame.time.get_ticks() / 1000.0
-        model = glm.rotate(
-            glm.mat4(1.0), time, glm.vec3(0.5, 1.0, 0.0)
-        )  # Gira no eixo misto
+        
+        for planet in all_planets:
+            planet.update(time)
+            
+            # Enviar a Model Matrix do planeta atual para o shader
+            glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm.value_ptr(planet.model))
 
-        glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm.value_ptr(model))
-
-        # Desenhar
-        glBindVertexArray(VAO)
-        glDrawElements(GL_TRIANGLES, len(sphere_inds), GL_UNSIGNED_INT, None)
+            # Desenhar o planeta
+            glBindVertexArray(VAO)
+            glDrawElements(GL_TRIANGLES, len(sphere_inds), GL_UNSIGNED_INT, None)
 
         pygame.display.flip()
         pygame.time.Clock().tick(60)
