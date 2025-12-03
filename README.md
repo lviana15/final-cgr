@@ -30,10 +30,7 @@ python3 main.py
 - [ ] Implementar lógica de atualização de órbita (translação e rotação) baseada no tempo (time.get_ticks).
 - [x] Instanciar o Sol, a Terra e a Lua com suas respectivas texturas e tamanhos.
 - [ ] Atualizar o Vertex Shader para calcular a Matriz TBN (Tangent, Bitangent, Normal).
-- [ ] Atualizar o Fragment Shader para implementar o modelo de iluminação Phong (Ambient + Diffuse + Specular).
+- [x] Atualizar o Fragment Shader para implementar o modelo de iluminação Phong (Ambient + Diffuse + Specular).
 - [ ] Atualizar o Fragment Shader para ler a textura de Normal Map e alterar a normal da superfície para criar o efeito de rugosidade.
 - [ ] Adicionar um Skybox (cubo ou esfera gigante invertida com textura de estrelas) para o fundo.
-- [ ] (Opcional - Risco Alto) Criar Framebuffer Object (FBO) para capturar o mapa de profundidade (Shadow Map).
-- [ ] (Opcional - Risco Alto) Implementar o "Render Pass" de sombras (renderizar a cena da visão do Sol).
-- [ ] (Opcional - Risco Alto) Aplicar o cálculo de sombra no Fragment Shader principal comparando a profundidade.
 - [ ] Revisar o código, remover prints de debug e organizar comentários finais.

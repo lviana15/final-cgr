@@ -83,6 +83,23 @@ def main():
     proj_loc = glGetUniformLocation(shader, "projection")
     tex_loc = glGetUniformLocation(shader, "textureSampler") # Localização da sampler
 
+    # Obter localizações Uniforms de Iluminação
+    lightPos_loc = glGetUniformLocation(shader, "lightPos")
+    viewPos_loc = glGetUniformLocation(shader, "viewPos")
+    lightColor_loc = glGetUniformLocation(shader, "lightColor")
+    ambientStrength_loc = glGetUniformLocation(shader, "ambientStrength")
+    isSun_loc = glGetUniformLocation(shader, "isSun") 
+
+    # Configurações de Luz (Sol) e Ambiente
+    light_pos = glm.vec3(0.0, 0.0, 0.0) # O Sol está na origem
+    light_color = glm.vec3(1.0, 1.0, 1.0) # Luz branca
+    ambient_strength = 0.25 # Diminuímos a luz ambiente para realçar o efeito difuso
+    
+    # Enviar Uniforms de Luz (Estáticas)
+    glUniform3fv(lightPos_loc, 1, glm.value_ptr(light_pos))
+    glUniform3fv(lightColor_loc, 1, glm.value_ptr(light_color))
+    glUniform1f(ambientStrength_loc, ambient_strength)
+
     # Enviar Projeção e View (Estáticas)
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm.value_ptr(view))
     glUniformMatrix4fv(proj_loc, 1, GL_FALSE, glm.value_ptr(projection))
@@ -142,18 +159,23 @@ def main():
 
         # Atualizar a Model Matrix (Rotação e Translação)
         time = pygame.time.get_ticks() / 1000.0
-        
+
         for planet in all_planets:
+        
+       # 1. Definir se o objeto é o Sol ou um Planeta
+            if planet == sun:
+                glUniform1i(isSun_loc, 1) # É o Sol (DESLIGA O PHONG)
+            else:
+                glUniform1i(isSun_loc, 0) # É um Planeta (LIGA O PHONG)
+
             planet.update(time)
             
-            # 1. Enviar a Model Matrix do planeta atual para o shader
+            # ... (Resto do código de envio da Model Matrix e Bind da Textura)
             glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm.value_ptr(planet.model))
-
-            # 2. Bind da Textura do planeta (Muito Importante!)
-            glActiveTexture(GL_TEXTURE0) # Ativa a unidade de textura 0
-            glBindTexture(GL_TEXTURE_2D, planet.texture_id) # Faz o bind da textura
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, planet.texture_id) 
             
-            # 3. Desenhar o planeta
+            # Desenhar o planeta
             glBindVertexArray(VAO)
             glDrawElements(GL_TRIANGLES, len(sphere_inds), GL_UNSIGNED_INT, None)
 
