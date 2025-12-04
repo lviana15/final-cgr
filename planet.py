@@ -39,25 +39,22 @@ class Planet:
         rotation_angle = glm.radians(time * self.rotation_speed)
         rotation_matrix = glm.rotate(glm.mat4(1.0), rotation_angle, glm.vec3(0.0, 1.0, 0.0))
         
-        # 2. Translação (Órbita em torno do Pai)
-        translation_matrix = glm.mat4(1.0)
+        # 2. Escala
+        scale_matrix = glm.scale(glm.mat4(1.0), glm.vec3(self.radius))
         
+        # 3. Translação (Órbita em torno do Pai)
         if self.parent:
-            # Rotação de órbita em torno do pai
+            # Rotação de órbita em torno do pai (eixo Y)
             orbit_angle = glm.radians(time * self.orbit_speed)
             orbit_rotation = glm.rotate(glm.mat4(1.0), orbit_angle, glm.vec3(0.0, 1.0, 0.0))
             
-            # A translação total do planeta é:
-            # M_parent * R_orbita * T_inicial * R_propria * S_escala
+            # Translação inicial para a órbita (posiciona o planeta no raio de órbita)
+            initial_orbit_pos = glm.translate(glm.mat4(1.0), glm.vec3(self.orbit_radius, 0.0, 0.0))
             
-            # Pega a posição do planeta pai
-            translation_matrix = self.parent.model * orbit_rotation
-            
-        # 3. Escala
-        scale_matrix = glm.scale(glm.mat4(1.0), glm.vec3(self.radius))
-        
-        # 4. Cálculo da Matriz Model final
-        # Ordem de Transformação:
-        # PosiçãoGlobal(Parent) * RotaçãoÓrbita * PosiçãoInicialNaÓrbita * RotaçãoPrópria * Escala
-        
-        self.model = translation_matrix * self.initial_translation * rotation_matrix * scale_matrix
+            # Ordem de Transformação:
+            # Posição_Pai * Rotação_Órbita * Translação_Inicial * Rotação_Própria * Escala
+            self.model = self.parent.model * orbit_rotation * initial_orbit_pos * rotation_matrix * scale_matrix
+        else:
+            # Se for o Sol (sem pai), apenas rotação própria e escala
+            # Ordem: Rotação_Própria * Escala
+            self.model = rotation_matrix * scale_matrix
