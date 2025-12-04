@@ -55,7 +55,15 @@ class Planet:
             
             # Ordem de Transformação:
             # Posição_Pai * Rotação_Órbita * Translação_Inicial * Rotação_Própria * Escala
-            self.model = self.parent.model * orbit_rotation * initial_orbit_pos * rotation_matrix * scale_matrix
+            # Extrair apenas a translação (posição) do pai para evitar herdar escala/rotação
+            parent_translation = glm.translate(glm.mat4(1.0), glm.vec3(
+                self.parent.model[3][0],
+                self.parent.model[3][1],
+                self.parent.model[3][2]
+            ))
+
+            # Construir a model matrix do filho baseada na posição mundial do pai
+            self.model = parent_translation * orbit_rotation * initial_orbit_pos * rotation_matrix * scale_matrix
         else:
             # Se for o Sol (sem pai), apenas rotação própria e escala
             # Ordem: Rotação_Própria * Escala

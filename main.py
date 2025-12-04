@@ -6,9 +6,10 @@ import numpy as np
 import glm
 import ctypes
 
-from utils import load_shader, load_texture # <--- Importando load_texture
+from utils import load_shader, load_texture
 from meshes import generate_sphere
-from planet import Planet # <--- Importando a classe Planet
+from planet import Planet
+from camera import Camera
 
 # Escala de Tempo para acelerar as órbitas e rotações
 TIME_SCALE = 8000.0
@@ -36,6 +37,11 @@ def main():
 
     glViewport(0, 0, 800, 600)
     glEnable(GL_DEPTH_TEST)
+    # Capturar mouse para controle FPS: ocultar cursor e prender dentro da janela
+    pygame.mouse.set_visible(False)
+    pygame.event.set_grab(True)
+    # Limpar movimento relativo inicial
+    pygame.mouse.get_rel()
 
     try:
         shader = load_shader("shaders/basic.vert", "shaders/basic.frag")
@@ -122,11 +128,9 @@ def main():
     glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(11 * 4))
     glEnableVertexAttribArray(4)
 
-    # Configuração das Matrizes (Câmera Fixa)
-    projection = glm.perspective(glm.radians(45.0), 800 / 600, 0.1, 100.0)
-    view = glm.lookAt(
-        glm.vec3(0, 0, 8), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0)
-    )  # Câmera um pouco mais longe (Z=8)
+    # Instanciar Câmera com controle FPS
+    # Ajustei a sensibilidade do mouse para 0.15 (graus por pixel) para resposta mais perceptível
+    camera = Camera(position=glm.vec3(0, 0, 8), fov=45.0, aspect_ratio=800/600, speed=8.0, mouse_sensitivity=0.15)
 
     # Obter localizações Uniforms
     model_loc = glGetUniformLocation(shader, "model")
@@ -153,13 +157,15 @@ def main():
     glUniform3fv(lightColor_loc, 1, glm.value_ptr(light_color))
     glUniform1f(ambientStrength_loc, ambient_strength)
 
-    # Enviar Projeção e View (Estáticas)
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm.value_ptr(view))
+    # Enviar Projeção (estática)
+    projection = camera.get_projection()
     glUniformMatrix4fv(proj_loc, 1, GL_FALSE, glm.value_ptr(projection))
 
-    # Enviar posição da câmera para o cálculo de iluminação Phong
-    camera_pos = glm.vec3(0, 0, 8)
-    glUniform3fv(viewPos_loc, 1, glm.value_ptr(camera_pos))
+    # Inicializar Clock para delta time
+    clock = pygame.time.Clock()
+
+    # Estado do controle do mouse (prendido / liberado). TAB alterna.
+    mouse_enabled = True
 
     # Dizer aos samplers que vão usar as Unidades de Textura 0 e 1
     glUniform1i(tex_loc, 0)        # Textura difusa na unidade 0
@@ -200,12 +206,59 @@ def main():
     # Loop Principal
     running = True
     while running:
+        # Calcular delta time
+        delta_time = clock.tick(60) / 1000.0
+        
+        # Capturar eventos
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (
                 event.type == KEYDOWN and event.key == K_ESCAPE
             ):
                 running = False
 
+            # Alternar captura do mouse com TAB (prender/soltar)
+            if event.type == KEYDOWN and event.key == K_TAB:
+                mouse_enabled = not mouse_enabled
+                if mouse_enabled:
+                    pygame.mouse.set_visible(False)
+                    pygame.event.set_grab(True)
+                    # limpar delta residual
+                    pygame.mouse.get_rel()
+                else:
+                    pygame.mouse.set_visible(True)
+                    pygame.event.set_grab(False)
+                    pygame.mouse.get_rel()
+        
+        # Capturar entrada (teclado e mouse)
+        keys_pressed = pygame.key.get_pressed()
+        keys = {
+            'w': keys_pressed[K_w],
+            's': keys_pressed[K_s],
+            'a': keys_pressed[K_a],
+            'd': keys_pressed[K_d],
+            'up': keys_pressed[K_UP],
+            'down': keys_pressed[K_DOWN],
+            'left': keys_pressed[K_LEFT],
+            'right': keys_pressed[K_RIGHT],
+        }
+        # Obter delta do mouse apenas se o mouse estiver habilitado
+        if mouse_enabled:
+            mouse_delta = pygame.mouse.get_rel()
+        else:
+            # consumir movimento, garantir zeros
+            pygame.mouse.get_rel()
+            mouse_delta = (0, 0)
+        
+        # Atualizar câmera
+        camera.update(keys, mouse_delta, delta_time)
+        
+        # Enviar matrizes de câmera atualizadas
+        view = camera.get_view()
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm.value_ptr(view))
+        
+        # Enviar posição da câmera para o cálculo de iluminação Phong
+        glUniform3fv(viewPos_loc, 1, glm.value_ptr(camera.position))
+        
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         # Atualizar a Model Matrix (Rotação e Translação)
@@ -240,7 +293,6 @@ def main():
             glDrawElements(GL_TRIANGLES, len(sphere_inds), GL_UNSIGNED_INT, None)
 
         pygame.display.flip()
-        pygame.time.Clock().tick(60)
 
     pygame.quit()
 
