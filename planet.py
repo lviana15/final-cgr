@@ -3,7 +3,7 @@ import glm
 import pygame
 
 class Planet:
-    def __init__(self, radius, rotation_speed, orbit_radius, orbit_speed, parent=None, texture_id=0):
+    def __init__(self, radius, rotation_speed, orbit_radius, orbit_speed, parent=None, texture_id=0, normal_map_id=None):
         """
         Inicializa um corpo celeste (Planeta, Lua ou Sol).
 
@@ -13,7 +13,8 @@ class Planet:
             orbit_radius (float): Raio da órbita em torno do 'parent'. (0 para o Sol).
             orbit_speed (float): Velocidade de translação em torno do 'parent' (graus/seg).
             parent (Planet, optional): O planeta que ele orbita. None para o Sol.
-            texture_id (int): O ID da textura do OpenGL (A ser implementado).
+            texture_id (int): O ID da textura do OpenGL.
+            normal_map_id (int, optional): O ID do normal map do OpenGL (None se não tiver).
         """
         self.radius = radius
         self.rotation_speed = rotation_speed
@@ -21,6 +22,7 @@ class Planet:
         self.orbit_speed = orbit_speed
         self.parent = parent
         self.texture_id = texture_id
+        self.normal_map_id = normal_map_id
         
         # Matrizes de Transformação
         self.model = glm.mat4(1.0)

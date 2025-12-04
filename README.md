@@ -29,8 +29,8 @@ python3 main.py
 - [x] Criar classe Planet que armazena posição, rotação, escala, textura e referência ao planeta "pai".
 - [x] Implementar lógica de atualização de órbita (translação e rotação) baseada no tempo (time.get_ticks).
 - [x] Instanciar o Sol, a Terra e a Lua com suas respectivas texturas e tamanhos.
-- [ ] Atualizar o Vertex Shader para calcular a Matriz TBN (Tangent, Bitangent, Normal).
+- [x] Atualizar o Vertex Shader para calcular a Matriz TBN (Tangent, Bitangent, Normal).
 - [x] Atualizar o Fragment Shader para implementar o modelo de iluminação Phong (Ambient + Diffuse + Specular).
-- [ ] Atualizar o Fragment Shader para ler a textura de Normal Map e alterar a normal da superfície para criar o efeito de rugosidade.
+- [x] Atualizar o Fragment Shader para ler a textura de Normal Map e alterar a normal da superfície para criar o efeito de rugosidade.
 - [ ] Adicionar um Skybox (cubo ou esfera gigante invertida com textura de estrelas) para o fundo.
 - [ ] Revisar o código, remover prints de debug e organizar comentários finais.
