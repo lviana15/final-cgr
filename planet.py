@@ -41,6 +41,11 @@ class Planet:
         rotation_angle = glm.radians(time * self.rotation_speed)
         rotation_matrix = glm.rotate(glm.mat4(1.0), rotation_angle, glm.vec3(0.0, 1.0, 0.0))
         
+        # Correção de orientação: aplicar rotação inicial de 180° em torno do eixo Y
+        # para corrigir o alinhamento dos pólos (Pólo Norte para cima, não para baixo)
+        initial_rotation = glm.rotate(glm.mat4(1.0), glm.radians(90.0), glm.vec3(0.0, 1.0, 0.0))
+        rotation_matrix = rotation_matrix * initial_rotation
+        
         # 2. Escala
         scale_matrix = glm.scale(glm.mat4(1.0), glm.vec3(self.radius))
         

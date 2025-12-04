@@ -151,4 +151,4 @@ class Camera:
         Returns:
             glm.mat4: Matriz projection para passar ao shader
         """
-        return glm.perspective(glm.radians(self.fov), self.aspect_ratio, 0.1, 100.0)
+        return glm.perspective(glm.radians(self.fov), self.aspect_ratio, 0.1, 500.0)

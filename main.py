@@ -6,10 +6,11 @@ import numpy as np
 import glm
 import ctypes
 
-from utils import load_shader, load_texture
+from utils import load_shader, load_texture, generate_starfield_texture
 from meshes import generate_sphere
 from planet import Planet
 from camera import Camera
+from skybox import Skybox
 
 # Escala de Tempo para acelerar as órbitas e rotações
 TIME_SCALE = 8000.0
@@ -171,6 +172,13 @@ def main():
     glUniform1i(tex_loc, 0)        # Textura difusa na unidade 0
     glUniform1i(normal_map_loc, 1) # Normal map na unidade 1
 
+    # Criar e configurar Skybox
+    skybox = Skybox(radius=200.0, stacks=20, sectors=20)
+    skybox_shader = load_shader("shaders/skybox.vert", "shaders/skybox.frag")
+    starfield_texture = generate_starfield_texture(width=1024, height=1024, star_density=0.01)
+    skybox.set_shader(skybox_shader)
+    skybox.set_texture(starfield_texture)
+
     # Instanciar os Corpos Celestes com velocidades baseadas em períodos reais
     sun = Planet(
         radius=1.5,
@@ -263,6 +271,12 @@ def main():
 
         # Atualizar a Model Matrix (Rotação e Translação)
         time = pygame.time.get_ticks() / 1000.0
+
+        # Renderizar Skybox primeiro
+        skybox.render(view, projection, camera.position)
+        
+        # Voltar ao shader principal para renderizar planetas
+        glUseProgram(shader)
 
         for planet in all_planets:
             # 1. Definir se o objeto é o Sol ou um Planeta

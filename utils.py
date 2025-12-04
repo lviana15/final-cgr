@@ -6,7 +6,8 @@ from OpenGL.GL import (
     GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, 
     glGenTextures, glBindTexture, glTexParameteri, glTexImage2D, glGenerateMipmap
 )
-from PIL import Image 
+from PIL import Image
+import numpy as np 
 
 
 def load_shader(vertex_path, fragment_path):
@@ -82,4 +83,59 @@ def load_texture(texture_path):
     
     # 6. Desfaz o bind e retorna o ID
     glBindTexture(GL_TEXTURE_2D, 0)
+    return texture_id
+
+
+def generate_starfield_texture(width=1024, height=1024, star_density=0.01):
+    """
+    Gera uma textura procedural de campo de estrelas.
+    
+    Args:
+        width: Largura da textura
+        height: Altura da textura
+        star_density: Densidade de estrelas (0.0 a 1.0)
+    
+    Returns:
+        ID da textura OpenGL
+    """
+    # Criar array com fundo preto
+    starfield = np.zeros((height, width, 4), dtype=np.uint8)
+    
+    # Adicionar stars aleatoriamente
+    num_stars = int(width * height * star_density)
+    star_x = np.random.randint(0, width, num_stars)
+    star_y = np.random.randint(0, height, num_stars)
+    
+    # Variar intensidade das estrelas (mais brilhantes)
+    star_brightness = np.random.randint(150, 255, num_stars)
+    
+    for i in range(num_stars):
+        x, y = star_x[i], star_y[i]
+        brightness = star_brightness[i]
+        # Cor branca com intensidade variável
+        starfield[y, x] = [brightness, brightness, brightness, 255]
+    
+    # Converter para imagem PIL
+    img = Image.fromarray(starfield, 'RGBA')
+    img_data = img.tobytes()
+    
+    # Criar textura OpenGL
+    texture_id = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, texture_id)
+    
+    # Parâmetros de wrapping e filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    
+    # Upload dados
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA,
+        width, height, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE, img_data
+    )
+    
+    glBindTexture(GL_TEXTURE_2D, 0)
+    
     return texture_id
